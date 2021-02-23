@@ -25,17 +25,12 @@ end
 for i = 2:length(FileNames)
     Y = fft2(squeeze(distortioniny(i,:,:)));
     Y=abs(fftshift(Y));
-    norm=sum(Y(:));
-    Y=Y./norm;
     Y = imgaussfilt(Y,2);%blur the FFT space image to make it nicer to deal with
     figure(i)
     imagesc(Y);
-    colorbar
     tempdat=[xi(:),yi(:),Y(:)];
     [sigma2,mu2]=robustcov(tempdat);
     pdf2=mvnpdf(tempdat,mu2,sigma2);
-    pdf2R=reshape(pdf2,size(xi));
-    contourf(xi,yi,pdf2R)
 %     tempdat=[xi(:),yi(:),Y(:)];
 %     [meshX,meshY,meshZ]=meshgrid(xrange,yrange,linspace(min(Y(:)),max(Y(:)),100));
 %     Xi=[meshX(:),meshY(:),meshZ(:)];
