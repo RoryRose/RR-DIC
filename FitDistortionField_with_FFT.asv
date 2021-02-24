@@ -22,31 +22,58 @@ for i = 2:length(FileNames)
     distortioniny(i,:,:)=dy-meandy(i);
 end
 %% find peaks in FFT space
-for i = 2:length(FileNames)
+%{
+opts.iso=false;
+opts.tilted=true;
+for i = 2:length(FileNames)-1
+    [xi, yi] = meshgrid(xrange,yrange);
     Y = fft2(squeeze(distortioniny(i,:,:)));
     Y=abs(fftshift(Y));
+    norm=sum(Y(:));
+    Y=Y./norm;
     Y = imgaussfilt(Y,2);%blur the FFT space image to make it nicer to deal with
     figure(i)
+    subplot(1,2,1)
     imagesc(Y);
-    tempdat=[xi(:),yi(:),Y(:)];
-    [sigma2,mu2]=robustcov(tempdat);
-    pdf2=mvnpdf(tempdat,mu2,sigma2);
-%     tempdat=[xi(:),yi(:),Y(:)];
-%     [meshX,meshY,meshZ]=meshgrid(xrange,yrange,linspace(min(Y(:)),max(Y(:)),100));
-%     Xi=[meshX(:),meshY(:),meshZ(:)];
-%     GMModel = fitgmdist(tempdat,1,'options',statset('MaxIter',1000));
-%     pdf=mvnpdf(Xi,GMModel.mu,GMModel.Sigma);
-%     
-%     pdf2=mvnpdf(tempdat,mu2,sigma2);
-%     scatter3(tempdat(:,1),tempdat(:,2),pdf2)
-%     scatter3(tempdat(:,1),tempdat(:,2),pdf)
-%     surf(meshX,meshY,pdf)
+    colorbar
+    [results] = autoGaussianSurf(xi,yi,Y,opts);
+    subplot(1,2,2)
+    G=abs(results.G);
+    normG=sum(G(:));
+    G=G./normG;
+    imagesc(xi(:),yi(:),G);
+    colorbar
     pause(1)
+    sigmax(i)=results.sigmax;
+    sigmay(i)=results.sigmay;
+    angle(i)=results.angle;
 end
-load fisheriris
-classes = unique(species);
-[~,score] = pca(meas,'NumComponents',2);
-% Y(abs(Y)>600)=0;
+figure
+scatter(meandx,sigmax)
+figure
+scatter(meandx,sigmay)
+figure
+scatter(meandx,angle)
+%}
+%%
+
+for i = 2:length(FileNames)
+    figure(i)
+    subplot(1,2,1)
+    [xi, yi] = meshgrid(xrange,yrange);
+    imagesc(abs(squeeze(distortioniny(i,:,:))))
+    axis image
+    colorbar
+    caxis([0,0.2])
+    Y = fft2(squeeze(distortioniny(i,:,:)));
+    Y=abs(fftshift(Y));
+    Y(Y>max(Y(:)).*0.99)=0;
+    fixed=ifft2(abs(Y));
+    subplot(1,2,2)
+    imagesc(abs(fixed));
+    axis image
+    colorbar
+end
 imagesc(abs(fftshift(Y)))
 colorbar
 axis image

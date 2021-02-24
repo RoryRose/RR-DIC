@@ -27,15 +27,16 @@
 MdataSize = 50; % Size of nxn data matrix
 % parameters are: [Amplitude, x0, sigmax, y0, sigmay, angel(in rad)]
 x0 = [1,0,50,0,50,0]; %Inital guess parameters
+
 x = [2,2.2,7,3.4,4.5,+0.02*2*pi]; %centroid parameters
-noise = 10; % noise in % of centroid peak value (x(1))
+noise = 0; % noise in % of centroid peak value (x(1))
 InterpolationMethod = 'nearest'; % 'nearest','linear','spline','cubic'
 FitForOrientation = 0; % 0: fit for orientation. 1: do not fit for orientation
 
 %% ---Generate centroid to be fitted--------------------------------------
 xin = x; 
 noise = noise/100 * x(1);
-[X,Y] = meshgrid(-MdataSize/2:MdataSize/2);
+[X,Y] = meshgrid(xrange,yrange);
 xdata = zeros(size(X,1),size(Y,2),2);
 xdata(:,:,1) = X;
 xdata(:,:,2) = Y;
@@ -44,8 +45,8 @@ xdatahr = zeros(300,300,2);
 xdatahr(:,:,1) = Xhr;
 xdatahr(:,:,2) = Yhr;
 %---Generate noisy centroid---------------------
-Z = D2GaussFunctionRot(x,xdata);
-Z = Z + noise*(rand(size(X,1),size(Y,2))-0.5);
+Z = Y;
+% Z = Z + noise*(rand(size(X,1),size(Y,2))-0.5);
 
 %% --- Fit---------------------
 if FitForOrientation == 0
