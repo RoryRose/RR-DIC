@@ -54,11 +54,10 @@ for i = 1:length(XYimrange)/2 %for every image pair
     pause(1)
     %}
 end
-for i = 1:length(XYimrange)/2 %for every image pair
 
 %% find the time for every pixel in the DIC image sequence
 DICpixelcolumlength=pixelwidth./size(firstxi(1,:,:),2);%number of sem pixels in height of one DIC pixel
-DICpixelrowheight=pixelheight./size(firstxi(1,:,:),3);%number of sem pixels in length of one DIX pixel
+DICpixelrowheight=pixelheight./size(firstxi(1,:,:),3);%number of sem pixels in length of one DIC pixel
 for i=1:length(FileNames)
     DICpixeltime(i,:)=semtime.betweenscan.*i+(i-1).*semtime.frame+tempdata1.index_y.*semtime.dwell.*...
         DICpixelcolumlength+tempdata1.index_x.*semtime.betweenrow.*...
@@ -156,7 +155,7 @@ end
 %% fit the distortion fields to a 3D polynomial and evaluate at every pixel - here using a polyfit
 udistfitted=[];
 vdistfitted=[];
-for i=Ximrange
+for i=Yimrange
     [XOut, YOut, ZOut] = prepareSurfaceData(tempdata.pos_x,tempdata.pos_y,squeeze(udist(i,:,:)));
     udistfit{i} = fit( [XOut, YOut], ZOut, 'poly23');
     [XOut, YOut, ZOut] = prepareSurfaceData(tempdata.pos_x,tempdata.pos_y,squeeze(vdist(i,:,:)));
@@ -171,32 +170,45 @@ yval=linspace(min(Yyi(:)),max(Yyi(:)),100);
 
 
 %% let's reduce noize by filtering out some points in frequency space
-%{
+{
 thresh=0.4;
 D=5;%radius in pixels of the mask of values to test
-udistcorr=reshape(udist,size(squeeze(xi)))-udistfitted;
-vdistcorr=reshape(vdist,size(squeeze(xi)))-vdistfitted;
-for i=Ximrange
+udistcorr=reshape(udist(Yimrange,:,:),size(squeeze(Yxi(Yimrange,:,:))))-udistfitted(Yimrange,:,:);
+vdistcorr=reshape(vdist(Yimrange,:,:),size(squeeze(Yxi(Yimrange,:,:))))-vdistfitted(Yimrange,:,:);
+for i=1:length(Yimrange)
+    
     fixedudistcorr(i,:,:)=f_reduceNoize(udistcorr(i,:,:),D,thresh);%Use FFt mask which keeps values within radius D of center of shifted FFt but reduces values above the theshold percentage of max
     fixedvdistcorr(i,:,:)=f_reduceNoize(vdistcorr(i,:,:),D,thresh);
 end
-udistcorr=fixedudistcorr+udistfitted;
-vdistcorr=fixedvdistcorr+vdistfitted;
+udistcorr=fixedudistcorr+udistfitted(Yimrange,:,:);
+vdistcorr=fixedvdistcorr+vdistfitted(Yimrange,:,:);
+%for x disp
+thresh=0.7;
+D=5;%radius in pixels of the mask of values to test
+udistcorr=reshape(udist(Ximrange,:,:),size(squeeze(Xxi(Ximrange,:,:))))-udistfitted(Ximrange,:,:);
+vdistcorr=reshape(vdist(Ximrange,:,:),size(squeeze(Xxi(Ximrange,:,:))))-vdistfitted(Ximrange,:,:);
+for i=1:length(Ximrange)
+    
+    fixedudistcorr(i,:,:)=f_reduceNoize(udistcorr(i,:,:),D,thresh);%Use FFt mask which keeps values within radius D of center of shifted FFt but reduces values above the theshold percentage of max
+    fixedvdistcorr(i,:,:)=f_reduceNoize(vdistcorr(i,:,:),D,thresh);
+end
+udistcorr=fixedudistcorr+udistfitted(Ximrange,:,:);
+vdistcorr=fixedvdistcorr+vdistfitted(Ximrange,:,:);
 %DEBUG - Plot the surfaces of the fit, origional data, and noize reduced data
 %{
-for i=2:7
+for i=Yimrange
     subplot(3,2,1)
-    surf(squeeze(xi(i,:,:)),squeeze(Xyi(i,:,:)),squeeze(udistfitted(i,:,:)))
+    surf(squeeze(Yxi(i,:,:)),squeeze(Yyi(i,:,:)),squeeze(udistfitted(i,:,:)))
     subplot(3,2,2)
-    surf(squeeze(xi(i,:,:)),squeeze(Xyi(i,:,:)),squeeze(vdistfitted(i,:,:)))
+    surf(squeeze(Yxi(i,:,:)),squeeze(Yyi(i,:,:)),squeeze(vdistfitted(i,:,:)))
     subplot(3,2,3)
-    surf(squeeze(xi(i,:,:)),squeeze(Xyi(i,:,:)),squeeze(reshape(udist(i,:,:),size(squeeze(xi(i,:,:))))))
+    surf(squeeze(Yxi(i,:,:)),squeeze(Yyi(i,:,:)),squeeze(reshape(udist(i,:,:),size(squeeze(Yxi(i,:,:))))))
     subplot(3,2,4)
-    surf(squeeze(xi(i,:,:)),squeeze(Xyi(i,:,:)),squeeze(reshape(vdist(i,:,:),size(squeeze(xi(i,:,:))))))
+    surf(squeeze(Yxi(i,:,:)),squeeze(Yyi(i,:,:)),squeeze(reshape(vdist(i,:,:),size(squeeze(Yxi(i,:,:))))))
     subplot(3,2,5)
-    surf(squeeze(xi(i,:,:)),squeeze(Xyi(i,:,:)),squeeze(udistcorr(i,:,:)))
+    surf(squeeze(Yxi(i,:,:)),squeeze(Yyi(i,:,:)),squeeze(udistcorr(i,:,:)))
     subplot(3,2,6)
-    surf(squeeze(xi(i,:,:)),squeeze(Xyi(i,:,:)),squeeze(vdistcorr(i,:,:)))
+    surf(squeeze(Yxi(i,:,:)),squeeze(Yyi(i,:,:)),squeeze(vdistcorr(i,:,:)))
     pause(5)
 end
 %}

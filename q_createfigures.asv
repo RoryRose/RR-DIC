@@ -105,7 +105,7 @@ sgtitle('Drift Corrected Fitted distortion field data as a function of x and y d
 %smooth data
 for i=Yimrange
     subplot(2,2,1)
-    h=surf(squeeze(Xxi(i,:,:)),squeeze(Xyi(i,:,:)),squeeze(reshape(udist(i,:,:),size(squeeze(Xxi(i,:,:))))));
+    h=surf(squeeze(Xxi(i,:,:)),squeeze(Xyi(i,:,:)),squeeze(reshape(udist(i,:,:),size(squeeze(Yxi(i,:,:))))));
     set(h,'Edgecolor','none')
     xlabel('x1')
     ylabel('x2')
@@ -113,19 +113,25 @@ for i=Yimrange
     title(strcat('Raw u displacement field'))
     subplot(2,2,2)
     imagesc(abs(fftshift(fft2(squeeze(reshape(udist(i,:,:),size(squeeze(Xxi(i,:,:)))))))));
-    caxis([0,max(max(abs(fftshift(fft2(squeeze(reshape(udist(i,:,:),size(squeeze(Xxi(i,:,:))))))))))*0.4])
-    title(strcat('FFT of Raw u displacement field'))
+    caxis([0,max(max(abs(fftshift(fft2(squeeze(reshape(udist(i,:,:),size(squeeze(Yxi(i,:,:))))))))))*0.4])
+    xlabel('x1')
+    ylabel('x2')
+    zlabel('v displacement')
+    title(strcat('Raw u displacement field'))
     subplot(2,2,3)
-    h=surf(squeeze(Xxi(i,:,:)),squeeze(Xyi(i,:,:)),squeeze(udistcorr(i,:,:)));
+    h=surf(squeeze(Yxi(i,:,:)),squeeze(Yyi(i,:,:)),squeeze(udistcorr(i,:,:)));
     set(h,'Edgecolor','none')
     xlabel('x1')
     ylabel('x2')
     zlabel('u displacement')
     title(strcat('FFT filtered u displacement field'))
     subplot(2,2,4)
-    imagesc(abs(fftshift(fft2(squeeze(reshape(udistcorr(i,:,:),size(squeeze(Xxi(i,:,:)))))))));
-    caxis([0,max(max(abs(fftshift(fft2(squeeze(reshape(udist(i,:,:),size(squeeze(Xxi(i,:,:))))))))))*0.4])
-    title(strcat('FFT of u displacement field after mask applied'))
+    h=surf(squeeze(Yxi(i,:,:)),squeeze(Yyi(i,:,:)),squeeze(vdistcorr(i,:,:)));
+    set(h,'Edgecolor','none')
+    xlabel('x1')
+    ylabel('x2')
+    zlabel('v displacement')
+    title(strcat('FFT filtered v displacement field'))
     sgtitle('Drift Corrected X displacement distortion fields showing FFT filtering')
     pause(5)
 end
