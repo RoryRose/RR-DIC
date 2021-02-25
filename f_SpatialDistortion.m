@@ -1,16 +1,19 @@
-function [Pxv,Pxu,Pxvfitvals,Pxufitvals]=f_SpatialDistortion(xval,meandx,vdistfitted,udistfitted,Ximrange)
+function [Pxv,Pxu]=f_SpatialDistortion(meandx,vdistfitted,udistfitted,Ximrange)
 % Model the variation in each point on the surface as a function of x
 %displacement as a linear function
-%INPUTS
+%INPUTS:
 %   xval = list of x (or y) displacemenbts to evaluate the fit at
 %   meandx = x (or y) translation of each image
 %   vdistfitted = fit of v distortion field evaluated for every pixel
 %   udistfitted = fit of u distortion field evaluated for every pixel
 %   Ximrange = list of images with x or y deformation
+%OUTPUTS:
+%   Pxv = cell array of v distortion fits for each pixel as a function of translation
+%       required to get to the first image
+%   Pxu = cell array of u distortion fits for each pixel as a function of translation
+%       required to get to the first image
 Pxv=cell(size(vdistfitted,2),size(vdistfitted,3));
 Pxu=Pxv;
-Pxufitvals=NaN(size(vdistfitted,2),size(vdistfitted,3),length(xval));
-Pxvfitvals=Pxufitvals;
 for j=1:size(vdistfitted,3)
     for i=1:size(vdistfitted,2)   
         %DEBUG - For every pixel, plot the distortion as a function of
@@ -22,10 +25,8 @@ for j=1:size(vdistfitted,3)
         %}
         %IMPORTANT ASSUMPTION: I have ignored the first (zero) value for
         %every one as this might skew the fits and cause problems
-        Pxv{i,j} = polyfit(meandx(Ximrange(2:end)),squeeze(vdistfitted(2:end,i,j))',1);
-        Pxvfitvals(i,j,:) = Pxv{i,j}(1)*xval+Pxv{i,j}(2);
-        Pxu{i,j} = polyfit(meandx(Ximrange(2:end)),squeeze(udistfitted(2:end,i,j))',1);
-        Pxufitvals(i,j,:) = Pxu{i,j}(1)*xval+Pxu{i,j}(2);
+        Pxv{i,j} = polyfit(meandx(Ximrange(2:end)),squeeze(vdistfitted(Ximrange(2:end),i,j))',1);
+        Pxu{i,j} = polyfit(meandx(Ximrange(2:end)),squeeze(udistfitted(Ximrange(2:end),i,j))',1);
     end
 end
 %DEBUG - plot all of the distortions as a function of displacement
