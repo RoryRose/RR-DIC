@@ -1,4 +1,4 @@
-clear all
+
 clc
 % Methodology for correcting time-dependent and time-indipendent
 % distortions. This version of the code assumes input data is of the form
@@ -54,6 +54,8 @@ for i = 1:length(XYimrange)/2 %for every image pair
     pause(1)
     %}
 end
+for i = 1:length(XYimrange)/2 %for every image pair
+
 %% find the time for every pixel in the DIC image sequence
 DICpixelcolumlength=pixelwidth./size(firstxi(1,:,:),2);%number of sem pixels in height of one DIC pixel
 DICpixelrowheight=pixelheight./size(firstxi(1,:,:),3);%number of sem pixels in length of one DIX pixel
@@ -82,14 +84,35 @@ for i = 1:length(XYimrange)/2 %for every image pair
     secondidx=XYimrange(2*i);
     timediff=DICpixeltime(secondidx,:)-DICpixeltime(firstidx,:);
     timediff=reshape(timediff, size(squeeze(firstxi(1,:,:))));
-    velocitymeantime(i,:,:)=squeeze(DICpixeltimeshaped(i,:,:))+timediff./2; %since we are finding the finite difference velocity, it is evaluated at the mean aquisiotion time
+    velocitymeantime(i,:,:)=squeeze(DICpixeltimeshaped(firstidx,:,:))+timediff./2; %since we are finding the finite difference velocity, it is evaluated at the mean aquisiotion time
     uvelocity(i,:,:)=squeeze(udistfitted(i,:,:))./timediff;
     vvelocity(i,:,:)=squeeze(vdistfitted(i,:,:))./timediff;
 end
-%% model drift velocity for each pixel as a function of time with a smothing spline fit and integrate to get the drift from start to any time
+%% model drift velocity for each pixel as a function of time with a smothing spline fit
 [Driftumodel,Driftvmodel]=f_DriftDistortion(uvelocity,vvelocity,velocitymeantime);
-to find drift after an
-drifxtaftertime=
+
+%integrate for every pixel in every image - Currently uses Trapezoidal
+%method for speed. Fit is evaluated for 1000 time points from 0 to the
+%pixel time and then integrated.
+drifxtaftertime=NaN(size(DICpixeltimeshaped));
+drifytaftertime=drifxtaftertime;
+parfor fileidx=1:length(FileNames)
+    drifxtaftertime(fileidx,:,:)=f_udrifteval(DICpixeltimeshaped,Driftumodel,fileidx);
+    drifytaftertime(fileidx,:,:)=f_udrifteval(DICpixeltimeshaped,Driftvmodel,fileidx);
+end
+%DEBUG - plot the drift distortion after fitting and the drift velocity
+%before fitting for 50 pixels along the diagonal
+%{
+for i=1:50
+    yyaxis left
+    plot(DICpixeltimeshaped(:,i,i),drifxtaftertime(:,i,i))
+    hold on
+    yyaxis right
+    plot(velocitymeantime(:,i,i),uvelocity(:,i,i))
+    hold on
+    pause(0.2)
+end
+%}
 %% for x displacements find the distortion field u and v
 %for this set - first 7 have x disp and rest have y disp
 Ximrange=1:7;
@@ -97,6 +120,8 @@ Yimrange=7:13;
 for i = Ximrange
     tempdata = readtable(FileNames{i});
     [Xxi(i,:,:),Xyi(i,:,:),dx,dy]=f_dataextract(tempdata,dispq,meandx(i),meandy(i));
+    dx=dx+drifxtaftertime(i,:)';%account for drift distortion
+    dy=dy+drifytaftertime(i,:)';%account for drift distortion
     udist(i,:,:)=dx-meandx(i);
     vdist(i,:,:)=dy-meandy(i);
 end
@@ -123,6 +148,8 @@ meandx=meandx-meandx(Yimrange(1));
 for i = Yimrange
     tempdata = readtable(FileNames{i});
     [Yxi(i,:,:),Yyi(i,:,:),dx,dy]=f_dataextract(tempdata,dispq,meandx(i),meandy(i));
+    dx=dx+drifxtaftertime(i,:)';%account for drift distortion
+    dy=dy+drifytaftertime(i,:)';%account for drift distortion
     udist(i,:,:)=dx-meandx(i);
     vdist(i,:,:)=dy-meandy(i);
 end

@@ -1,4 +1,4 @@
-function [meandx,meandy,tformEstimate]=f_getTform(imageDir)
+function [meandx,meandy,pixelheight,pixelwidth,tformEstimate]=f_getTform(imageDir)
 %Find Images and calculate the x and y translation between images
 %INPUTS:
 %   imageDir = Directory containing all of the images and no other tif
@@ -23,6 +23,8 @@ optimizer.GradientMagnitudeTolerance=1e-3;
 optimizer.MinimumStepLength=1e-8;
 tformEstimate=cell(length(imageNames),1);
 refimage=image1(:,:,1);
+pixelheight=size(refimage,1);
+pixelwidth=size(refimage,2);
 %run optimiser to find transformations
 parfor i=2:length(imageNames)
     currentimage=image1(:,:,i);
