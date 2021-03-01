@@ -7,30 +7,27 @@ dxspatial=[];
 dyspatial=[];
 spatialudist=[];
 spatialvdist=[];
-for i = 1:length(FileNames)
-    tempdata = readtable(FileNames{i});
-    [Xi(i,:,:),Yi(i,:,:),dx,dy]=f_dataextract(tempdata,dispq,meandx(i),meandy(i));
-    
-    dxdrift=dx+drifxtaftertime(i,:)';%account for drift distortion
-    dydrift=dy+drifytaftertime(i,:)';%account for drift distortion
+for i = 1:length(FileNames)  
+    dxdrift=squeeze(dx(i,:,:))+squeeze(drifxtaftertime(i,:,:));%account for drift distortion
+    dydrift=squeeze(dy(i,:,:))+squeeze(drifytaftertime(i,:,:));%account for drift distortion
     for jdx=1:size(Xi,3)
         for idx=1:size(Yi,2)
             Pxufitvals(idx,jdx) = Pxu{idx,jdx}(1)*meandx(i)+Pxu{idx,jdx}(2);%for each pixel evaluate the fit at a x disp to first
             Pyufitvals(idx,jdx) = Pyu{idx,jdx}(1)*meandy(i)+Pyu{idx,jdx}(2);%for each pixel evaluate the fit at a x disp to first
         end
     end
-    dxspatial=squeeze(dxdrift)-reshape(Pxufitvals,size(squeeze(dxdrift)));
-    dyspatial=squeeze(dydrift)-reshape(Pyufitvals,size(squeeze(dydrift)));
+    dxspatial=squeeze(dxdrift)-Pxufitvals;
+    dyspatial=squeeze(dydrift)-Pyufitvals;
     driftudist(i,:,:)=dxdrift-meandx(i);
     driftvdist(i,:,:)=dydrift-meandy(i);
-    rawtudist(i,:,:)=dx-meandx(i);
-    rawvdist(i,:,:)=dy-meandy(i);
+    rawtudist(i,:,:)=squeeze(dx(i,:,:))-meandx(i);
+    rawvdist(i,:,:)=squeeze(dy(i,:,:))-meandy(i);
     spatialudist(i,:,:)=dxspatial-meandx(i);
     spatialvdist(i,:,:)=dyspatial-meandy(i);
 end
 %% plot
 h1=figure;
-filename='Distortion correction example with two evaluations.gif';
+filename='Ncorr Distortion correction example with two evaluations.gif';
 Xi=xi;
 Yi=yi;
 for i=2:13

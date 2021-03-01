@@ -1,15 +1,17 @@
 function q_createfigures
 %Raw Drift Distortion
 figure(1)
+udist=rawudist;
+vdist=rawvdist;
 for i = 1:length(XYimrange)/2 %for every image pair
     subplot(2,1,1)
-    surf(squeeze(firstxi(i,:,:)),squeeze(firstyi(i,:,:)),reshape(squeeze(udist(i,:)),size(squeeze(firstxi(i,:,:)))))
+    surf(squeeze(xi(i,:,:)),squeeze(yi(i,:,:)),reshape(squeeze(udist(i,:)),size(squeeze(xi(i,:,:)))))
     xlabel('x1')
     ylabel('x2')
     zlabel('u displacement')
     title(strcat('Uncorrected u displacement field for image pair number =',num2str(i)))
     subplot(2,1,2)
-    surf(squeeze(firstxi(i,:,:)),squeeze(firstyi(i,:,:)),reshape(squeeze(vdist(i,:)),size(squeeze(firstxi(i,:,:)))))
+    surf(squeeze(xi(i,:,:)),squeeze(yi(i,:,:)),reshape(squeeze(vdist(i,:)),size(squeeze(xi(i,:,:)))))
     xlabel('x1')
     ylabel('x2')
     zlabel('v displacement')
@@ -33,28 +35,28 @@ end
 figure(3)
 for i=1:length(XYimrange)/2
     subplot(2,2,1)
-    h=surf(squeeze(Xxi(i,:,:)),squeeze(Xyi(i,:,:)),squeeze(udistfitted(i,:,:)));
+    h=surf(squeeze(xi(i,:,:)),squeeze(yi(i,:,:)),squeeze(udistfitted(i,:,:)));
     set(h,'Edgecolor','none')
     xlabel('x1')
     ylabel('x2')
     zlabel('u displacement')
     title(strcat('Fitted u displacement field'))
     subplot(2,2,2)
-    h=surf(squeeze(Xxi(i,:,:)),squeeze(Xyi(i,:,:)),squeeze(vdistfitted(i,:,:)))
+    h=surf(squeeze(xi(i,:,:)),squeeze(yi(i,:,:)),squeeze(vdistfitted(i,:,:)))
     set(h,'Edgecolor','none')
     xlabel('x1')
     ylabel('x2')
     zlabel('u displacement')
     title(strcat('Fitted v displacement field'))
     subplot(2,2,3)
-    h=surf(squeeze(Xxi(i,:,:)),squeeze(Xyi(i,:,:)),squeeze(reshape(udist(i,:,:),size(squeeze(Xxi(i,:,:))))))
+    h=surf(squeeze(xi(i,:,:)),squeeze(yi(i,:,:)),squeeze(reshape(udist(i,:,:),size(squeeze(xi(i,:,:))))))
     set(h,'Edgecolor','none')
     xlabel('x1')
     ylabel('x2')
     zlabel('u displacement')
     title(strcat('Raw u displacement field'))
     subplot(2,2,4)
-    h=surf(squeeze(Xxi(i,:,:)),squeeze(Xyi(i,:,:)),squeeze(reshape(vdist(i,:,:),size(squeeze(Xxi(i,:,:))))))
+    h=surf(squeeze(xi(i,:,:)),squeeze(yi(i,:,:)),squeeze(reshape(vdist(i,:,:),size(squeeze(xi(i,:,:))))))
     set(h,'Edgecolor','none')
     xlabel('x1')
     ylabel('x2')
