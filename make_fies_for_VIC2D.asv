@@ -1,4 +1,4 @@
-imageDir='C:\Users\User\OneDrive - Nexus365\Part II\Data\DIC\Example from Phani\pre-test calibration\XY disp\';%file location of images
+imageDir='C:\Users\User\Downloads\DriftImages - Copy';%file location of images
 cd(imageDir)
 imageNames=dir(fullfile(imageDir,'*.tif'));
 imageNames = {imageNames.name}';
@@ -55,7 +55,7 @@ end
 
 dateandtime=join(horzcat([DateS',TimeS']),' ');
 dateandtime=datetime(dateandtime,'InputFormat','dd MMM yyyy HH:mm:ss');
-TimeS=strcat({' '},TimeS);
+TimeS=strcat(' ',TimeS);
 imageNames=strcat('"',imageNames,'"'); %correct format for VIC 2D imagelist file
 timediff=seconds(duration(dateandtime-min(dateandtime)));
 XposN=split(XposS,' ');
