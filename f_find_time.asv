@@ -25,16 +25,14 @@ for i=1:length(FileNames)
             DICpixelrowheight; %time from start of aquisition period of every pixel in the image
     end
 end
-% h=pcolor(squeeze(xi(1,:,:)),squeeze(yi(1,:,:)),squeeze(DICpixeltime(1,:,:)));
-% set(h,'EdgeColor','none')
+h=pcolor(squeeze(xi(1,:,:)),squeeze(yi(1,:,:)),squeeze(DICpixeltime(1,:,:)));
+set(h,'EdgeColor','none')
 
-DICpixeltimeshaped=NaN(size(xi,1),size(xi,2)*size(xi,3));
+DICpixeltimeshaped=NaN(size(xi));
 for i=1:length(FileNames)
     for j=1:size(xi,3)
         for k=1:size(xi,2)
-            DICpixeltimeshaped(i,j+(k-1)*size(xi,3))=DICpixeltime(i,k,j);
-        end
-    end
+            DICpixeltimeshaped(i,j+(k-1*size(xi,3))=DICpixeltime(i,j,k);
     %DEBUG - plot the picel time for every image
     %{
     h=pcolor(squeeze(xi(i,:,:)),squeeze(yi(i,:,:)),squeeze(DICpixeltimeshaped(i,:,:)));
@@ -42,3 +40,4 @@ for i=1:length(FileNames)
     pause(1)
     %}
 end
+plot(DICpixeltimeshaped(1,:))

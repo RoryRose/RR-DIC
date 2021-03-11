@@ -156,7 +156,7 @@ runindex=1;%temporarilly setting the loop variable to one for testing
         %the local model for every pixel
         drifutaftertime=NaN(length(XYimrange)/2,size(drifutaftertimeT,2),size(drifutaftertimeT,3));
         drifvtaftertime=drifutaftertime;
-        for i = 1:length(XYimrange)/2
+        for i = 1:max(FileNames)
             firstidx=XYimrange(2*i-1);
             secondidx=XYimrange(2*i);    
             timediff=DICpixeltimeshaped(secondidx,:,:)-DICpixeltimeshaped(firstidx,1,1);

@@ -13,16 +13,17 @@ function [Ximrange,Yimrange,XYimrange]=f_findimageindex(meandx,meandy)
 %   Yimrange = image number of first images after y displacements
 %   XYimrange = image numbers of the image pairs taken with no translation
 %       between them
+cutoffdist=max([meandx,meandy])./100;
 for i = 1:length(meandx)
     difinx=abs(meandx(i)-meandx);
     difiny=abs(meandy(i)-meandy);
-    difinx=difinx<10;
-    difiny=difiny<10;
-    difq(i)=sum(double(difinx).*double(difiny))>1;%find the image sets which have at least one other image with x and y displacement difference less than 10
+    difinx=difinx<cutoffdist;
+    difiny=difiny<cutoffdist;
+    difq(i)=sum(double(difinx).*double(difiny))>1;%find the image sets which have at least one other image with x and y displacement difference less than cutoffdist
 end
 difinx=diff(abs(meandx(1)-meandx));%find the x images to be used as they have a large x translation to the last image
 difiny=diff(abs(meandy(1)-meandy));%find the y images to be used as they have a large y translation to the last image
 XYimrange=[1:length(meandx)];
-Ximrange=XYimrange(difinx>10);
-Yimrange=XYimrange(difiny>10);
+Ximrange=XYimrange(difinx>cutoffdist);
+Yimrange=XYimrange(difiny>cutoffdist);
 XYimrange=XYimrange(difq==1);

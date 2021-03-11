@@ -1,6 +1,6 @@
 function [Pu,Pv]=f_DriftDistortion(uvelocity,vvelocity,velocitymeantime,sizey)
-% Model the variation in each point on the surface as a function of x
-%displacement as a linear function
+% Model the variation in each point on the surface as a function of t
+%as a smoothing spline
 %INPUTS
 %   xval = list of x (or y) displacemenbts to evaluate the fit at
 %   meandx = x (or y) translation of each image

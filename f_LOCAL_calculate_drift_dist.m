@@ -1,4 +1,4 @@
-function [drifxtaftertime,drifytaftertime,timevals]=f_LOCAL_calculate_drift_dist(XYimrange,FileNames,DICpixeltimeshaped,dispq,meandx,meandy,DICproscess,data)
+function [Pu,Pv]=f_LOCAL_calculate_drift_dist(XYimrange,FileNames,DICpixeltimeshaped,dispq,meandx,meandy,DICproscess,data)
 %For every image pair, find the ditsortion field corrected for drift and
 %fit to a polynomial surface. The drift velocity is then found by doin
 %finite difference gradient for each pixel in each image pair. The velocity
@@ -15,10 +15,11 @@ function [drifxtaftertime,drifytaftertime,timevals]=f_LOCAL_calculate_drift_dist
 %   DICproscess = DIC software used as input data
 %   data = the raw input data
 %OUTPUTS:
-%   drifxtaftertime = fitted x(u) drift distortion value for every pixel in every image
-%   drifytaftertime = fitted y(v) drift distortion value for every pixel in every image
+%   Pu = array of spline fits for the u drift disparity within each pair to be added to the global model 
+%   Pv = array of spline fits for the v drift disparity within each pair to be added to the global model 
 
 %find drift disparity
+disp('Finding local drift disparity...')
 for i = 1:length(XYimrange)/2 %for every image pair
     firstidx=XYimrange(2*i-1);
     secondidx=XYimrange(2*i);
@@ -26,64 +27,32 @@ for i = 1:length(XYimrange)/2 %for every image pair
     [~,~,seconddx,seconddy]=f_dataextract(FileNames,secondidx,DICproscess,dispq,meandx(secondidx),meandy(secondidx),data);
     udist(i,:,:)=seconddx-firstdx;
     vdist(i,:,:)=seconddy-firstdy;
-%% fit drift disparity to polynomial
-    [XOut, YOut, ZOut] = prepareSurfaceData(squeeze(firstxi(i,:,:)),squeeze(firstyi(i,:,:)),squeeze(udist(i,:,:)));
-    udistfit{i} = fit( [XOut, YOut], ZOut, 'poly23');
-    [XOut, YOut, ZOut] = prepareSurfaceData(squeeze(firstxi(i,:,:)),squeeze(firstyi(i,:,:)),squeeze(vdist(i,:,:)));
-    vdistfit{i} = fit( [XOut, YOut], ZOut, 'poly23');
-    udistfitted(i,:,:)=udistfit{i}(squeeze(firstxi(i,:,:)),squeeze(firstyi(i,:,:)));
-    vdistfitted(i,:,:)=vdistfit{i}(squeeze(firstxi(i,:,:)),squeeze(firstyi(i,:,:)));
-    %{    
-    figure(1)
-    subplot(2,2,1)
-    h=surf(squeeze(firstxi(i,:,:)),squeeze(firstyi(i,:,:)),squeeze(udist(i,:,:)));
-    set(h,'Edgecolor','none')
-    subplot(2,2,2)
-    h=surf(squeeze(firstxi(i,:,:)),squeeze(firstyi(i,:,:)),squeeze(vdist(i,:,:)));
-    set(h,'Edgecolor','none')
-    subplot(2,2,3)
-    h=surf(squeeze(firstxi(i,:,:)),squeeze(firstyi(i,:,:)),squeeze(udistfitted(i,:,:)));
-    set(h,'Edgecolor','none')
-    subplot(2,2,4)
-    h=surf(squeeze(firstxi(i,:,:)),squeeze(firstyi(i,:,:)),squeeze(vdistfitted(i,:,:)));
-    set(h,'Edgecolor','none')
-    pause(1)
-    %}
 end
-%% Find drift velocity
-%for every pixel find the finite difference of the drift velocity
-velocitymeantime=NaN(length(XYimrange)/2,size(firstxi,2),size(firstxi,3));
-uvelocity=velocitymeantime;
-vvelocity=uvelocity;
+smoothness=0.07;
 for i = 1:length(XYimrange)/2 %for every image pair
     firstidx=XYimrange(2*i-1);
-    secondidx=XYimrange(2*i);
-    timediff=DICpixeltimeshaped(secondidx,:,:)-DICpixeltimeshaped(firstidx,:,:);
-    velocitymeantime(i,:,:)=squeeze(DICpixeltimeshaped(firstidx,:,:))+squeeze(timediff)./2; %since we are finding the finite difference velocity, it is evaluated at the mean aquisiotion time
-    uvelocity(i,:,:)=squeeze(udistfitted(i,:,:))./squeeze(timediff);
-    vvelocity(i,:,:)=squeeze(vdistfitted(i,:,:))./squeeze(timediff);
+    secondidx=XYimrange(2*i);    
+    timediff=DICpixeltimeshaped(secondidx,:)-DICpixeltimeshaped(firstidx,1);
+    Pu{i}=fit(timediff(1:10:end)',squeeze(udist(i,1:10:end))','smoothingspline','SmoothingParam',smoothness);%fit the drift data to a spline
+    Pv{i}=fit(timediff(1:10:end)',squeeze(vdist(i,1:10:end))','smoothingspline','SmoothingParam',smoothness);
+    %DEBUG - plot the fit and raw data of the local drift distortion
+    %{
+    subplot(1,2,1)
+    scatter(timediff(:),udist(i,:))
+    xlabel('Time(s)')
+    ylabel('U distortion')
+    title(strcat('U Distortion for image pair',{' '},num2str(i)))
+    hold on
+    plot(timediff(1:10:end),Pu{i}(timediff(1:10:end)))
+    hold off
+    subplot(1,2,2)
+    scatter(timediff,vdist(i,:))
+    hold on
+    xlabel('Time(s)')
+    ylabel('V distortion')
+    title(strcat('V Distortion for image pair',{' '},num2str(i)))
+    plot(timediff(1:100:end),Pv{i}(timediff(1:100:end)))
+    hold off
+    pause(0.1)
+    %}
 end
-%% model drift velocity for each pixel as a function of time with a smothing spline fit 
-% sizey=50; %this is the number of pixels to exaluate the fit for to increase efficiency. The function samples in sizeyxsizey blocks taking the mean distortion within each block
-disp('calculating fits...')
-totallength=size(velocitymeantime,1)*size(velocitymeantime,2)*size(velocitymeantime,3);
-fitidx=round(1:floor(totallength/1000):totallength);
-Pu=fit(velocitymeantime(fitidx)',uvelocity(fitidx)','smoothingspline');
-Pv=fit(velocitymeantime(fitidx)',vvelocity(fitidx)','smoothingspline');
-[Driftumodel,Driftvmodel]=f_DriftDistortion(uvelocity,vvelocity,velocitymeantime,sizey);
-
-%integrate for every pixel in every image - Currently uses Trapezoidal
-%method for speed. Fit is evaluated for 1000 time points from 0 to the
-%pixel time and then integrated.
-
-drifxtaftertime=f_udrifteval(DICpixeltimeshaped,Driftumodel,fileidx,sizey);
-drifytaftertime=f_udrifteval(DICpixeltimeshaped,Driftvmodel,fileidx,sizey);
-disp('finished drift')
-%DEBUG - plot the drift distortion after fitting and the drift velocity
-%before fitting for 50 pixels along the diagonal
-%{
-figure
-plot(timevals,drifytaftertime)
-hold on
-plot(timevals,drifxtaftertime)
-%}

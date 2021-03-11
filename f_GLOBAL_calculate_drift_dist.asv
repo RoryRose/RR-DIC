@@ -95,18 +95,17 @@ end
 %% model the global drift velocity  as a function of time with a smothing spline fit 
 
 disp('calculating fits...')
-%reshape arrays into a line
 velocitymeantime=reshape(velocitymeantime',size(velocitymeantime,1)*size(velocitymeantime,2),1);
-vvelocity=reshape(vvelocity',size(vvelocity,1)*size(vvelocity,2),1);
-uvelocity=reshape(uvelocity',size(uvelocity,1)*size(uvelocity,2),1);
-totallength=length(velocitymeantime);
+vvelocity=reshape(velocitymeantime',size(velocitymeantime,1)*size(velocitymeantime,2),1);
+velocitymeantime=reshape(velocitymeantime',size(velocitymeantime,1)*size(velocitymeantime,2),1);
+totallength=size(velocitymeantime,2);
 fitidx=round(1:floor(totallength/1000):totallength);
-fitt=velocitymeantime(fitidx);
-fitvvelocity=vvelocity(fitidx);
-fituvelocity=uvelocity(fitidx);
+fitt=velocitymeantime(:,fitidx);
+fitvvelocity=vvelocity(:,fitidx);
+fituvelocity=uvelocity(:,fitidx);
 smoothness=0.07;
-Pu=fit(fitt,fituvelocity,'smoothingspline','SmoothingParam',smoothness);
-Pv=fit(fitt,fitvvelocity,'smoothingspline','SmoothingParam',smoothness);
+Pu=fit(fitt(:),fituvelocity(:),'smoothingspline','SmoothingParam',smoothness);
+Pv=fit(fitt(:),fitvvelocity(:),'smoothingspline','SmoothingParam',smoothness);
 % plot(velocitymeantime(fitidx)),vvelocity(fitidx)')
 % hold on
 % plot(velocitymeantime(:,fitidx)',vvelocity(:,fitidx)')
@@ -115,22 +114,20 @@ Pv=fit(fitt,fitvvelocity,'smoothingspline','SmoothingParam',smoothness);
 %method for speed. Fit is evaluated for 5000 time points from 0 to the
 %maximum pixel time and then integrated.
 
-timevals=fitt;
+timevals=reshape(fitt',size(fitt,1)*size(fitt,2),1);
 evaldrifxtaftertime=zeros(size(timevals));
 evaldrifytaftertime=evaldrifxtaftertime;
 disp('Integrating drift fits...')
 Splineeualuated=Pu(timevals);
 Splineevaluated=Pv(timevals);
+plot(Splineevaluated)
 for i = 2:length(timevals)
     evaldrifytaftertime(i)=trapz(timevals(1:i),Splineevaluated(1:i));
     evaldrifxtaftertime(i)=trapz(timevals(1:i),Splineeualuated(1:i));
 end
-%DEBUG - plot the global models
-%{
-plot(timevals,evaldrifxtaftertime)
+plot(evaldrifxtaftertime)
 hold on
 plot(timevals,evaldrifytaftertime)
-%}
 disp('evaluating integrated fit for every pixel...')
 %round the evaluation time for every pixel to the time nearest value in timevals
 roundedDICpixeltime=interp1(timevals,timevals,DICpixeltimeshaped,'nearest');
@@ -142,7 +139,6 @@ for t=1:length(timevals)
     drifxtaftertime(roundedDICpixeltime==timevals(t))=evaldrifxtaftertime(t);
     drifytaftertime(roundedDICpixeltime==timevals(t))=evaldrifytaftertime(t);
 end
-
 % drifxtaftertime=f_udrifteval(DICpixeltimeshaped,Driftumodel,fileidx,sizey);
 % drifytaftertime=f_udrifteval(DICpixeltimeshaped,Driftvmodel,fileidx,sizey);
 disp('finished drift')
