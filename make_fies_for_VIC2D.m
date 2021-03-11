@@ -1,8 +1,12 @@
-imageDir='C:\Users\User\OneDrive - Nexus365\Part II\Data\DIC\Example from Phani\pre-test calibration\XY disp\';%file location of images
+clear all
+imageDir='C:\Users\User\OneDrive - Nexus365\Part II\Data\DIC\Distortion correction\VIC 2d Testing\JG N1 2nd deformation\allimgs\';%file location of images
 cd(imageDir)
 imageNames=dir(fullfile(imageDir,'*.tif'));
 imageNames = {imageNames.name}';
 %% read images
+refimage(:,:,1)=imread([imageDir imageNames{1}]);
+pixelheight=size(refimage,1);
+pixelwidth=size(refimage,2);
 for i=1:length(imageNames)
     info=imfinfo([imageDir imageNames{i}],'TIF');
     tags=info.UnknownTags.Value;
@@ -52,6 +56,15 @@ for i=1:length(imageNames)
     DateS{i}=tags{row,2};
 end
 %%
+CycleTimeN=[split(CycleTimeS,' ')];
+CycleTimeN=str2double(CycleTimeN(:,:,2)).*60;%find the cycle time ad convert from minutes to seconds
+DwellTimeN=[split(DwellTimeS,' ')];
+DwellTimeN=str2double(DwellTimeN(:,:,2)).*1e-9;%find the cycle time ad convert from ns to seconds
+LineTimeN=[split(LineTimeS,' ')];
+LineTimeN=str2double(LineTimeN(:,:,2)).*1e-3;%find the cycle time ad convert from ns to seconds
+PixelSanity=LineTimeN-DwellTimeN.*pixelwidth
+LineTimeSanity=(CycleTimeN-DwellTimeN.*(pixelheight*pixelwidth))./pixelheight;
+Checkofline=(LineTimeSanity-LineTimeN)./LineTimeSanity.*100
 
 dateandtime=join(horzcat([DateS',TimeS']),' ');
 dateandtime=datetime(dateandtime,'InputFormat','dd MMM yyyy HH:mm:ss');
