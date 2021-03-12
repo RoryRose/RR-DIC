@@ -1,4 +1,4 @@
-function [Pxv,Pxu]=f_SpatialDistortion(meandx,meandy,xyq,vdistfitted,udistfitted,Ximrange,xi,yi)
+function [Pv,Pu]=f_SpatialDistortion(meandx,meandy,xyq,vdistfitted,udistfitted,Ximrange,xi,yi)
 % Model the variation in each point on the surface as a function of x
 %displacement as a linear function
 %INPUTS:
