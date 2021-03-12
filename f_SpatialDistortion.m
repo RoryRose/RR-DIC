@@ -1,4 +1,4 @@
-function [Pxv,Pxu]=f_SpatialDistortion(meandx,vdistfitted,udistfitted,Ximrange,xi)
+function [Pxv,Pxu]=f_SpatialDistortion(meandx,meandy,xyq,vdistfitted,udistfitted,Ximrange,xi,yi)
 % Model the variation in each point on the surface as a function of x
 %displacement as a linear function
 %INPUTS:
@@ -12,16 +12,28 @@ function [Pxv,Pxu]=f_SpatialDistortion(meandx,vdistfitted,udistfitted,Ximrange,x
 %       required to get to the first image
 %   Pxu = cell array of u distortion fits for each pixel as a function of translation
 %       required to get to the first image
-Pxv=cell(size(vdistfitted,2),size(vdistfitted,3));
-Pxu=Pxv;
-parfor j=1:size(vdistfitted,3)
-    [Putemp,Pvtemp]=f_fit_linear(j,meandx,vdistfitted,Ximrange,udistfitted);
-    Pxu(:,j)=Putemp;
-    Pxv(:,j)=Pvtemp;
+Pv=cell(size(xi,2),size(xi,3));
+Pu=Pv;
+if xyq==1
+    variable=meandx;
+else
+    variable=meandy;
 end
+parfor i=1:size(xi,2)
+    PvT=cell(1,size(xi,3));
+    PuT=cell(1,size(xi,3));
+    for j=1:1:size(xi,3)
+        PvT{j} = slmengine(variable(Ximrange),squeeze(vdistfitted(Ximrange,i,j))','Degree',1,'plot','off','knots',2);%currently set up as a linear fit, but it is set up to be easy to change
+        PuT{j} = slmengine(variable(Ximrange),squeeze(udistfitted(Ximrange,i,j))','Degree',1,'plot','off','knots',2);%currently set up as a linear fit, but it is set up to be easy to change
+    end
+    Pu(i,:)=PuT;
+    Pv(i,:)=PvT;
+end
+        
+
 %DEBUG - plot all of the distortions as a function of displacement
-figure
-plot(meandx(Ximrange),reshape(udistfitted(Ximrange,1:50,1:50),[size(udistfitted(Ximrange,:,:),1),50.*50 ]),'o')
+% figure
+% plot(meandx(Ximrange),reshape(udistfitted(Ximrange,1:50,1:50),[size(udistfitted(Ximrange,:,:),1),50.*50 ]),'o')
 
 % DEBUG - Plot all of the possible deformation correction surfaces
 %{
@@ -35,22 +47,4 @@ for i=1:100
     pause(0.1)
 end
 %}
-end
-function [Putemp,Pvtemp]=f_fit_linear(j,meandx,vdistfitted,Ximrange,udistfitted)
-%this function allows for an easier implementation of parallelization
-    Pvtemp=cell(size(vdistfitted,2),1);
-    Putemp=Pvtemp;
-    for i=1:size(vdistfitted,2)   
-        %DEBUG - For every pixel, plot the distortion as a function of
-        %displacement
-        %{
-        figure(3)
-        scatter(meandx(2:7),squeeze(udistfitted(2:end,i,j))')
-        hold off
-        %}
-        %IMPORTANT ASSUMPTION: I have ignored the first (zero) value for
-        %every one as this might skew the fits and cause problems
-        Pvtemp{i} = polyfit(meandx(Ximrange),squeeze(vdistfitted(Ximrange,i,j))',1);
-        Putemp{i} = polyfit(meandx(Ximrange),squeeze(udistfitted(Ximrange,i,j))',1);
-    end
 end

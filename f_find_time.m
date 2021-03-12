@@ -20,7 +20,7 @@ for i=1:length(FileNames)
             DICpixelcolumlength+squeeze(yi(1,:,:)).*semtime.betweenrow(i).*...
             DICpixelrowheight; %time from start of aquisition period of every pixel in the image
     else
-        DICpixeltime(i,:,:)=semtime.scan(i-1)+squeeze(xi(1,:,:)).*semtime.dwell(i).*...
+        DICpixeltime(i,:,:)=semtime.scan(i)+squeeze(xi(1,:,:)).*semtime.dwell(i).*...
             DICpixelcolumlength+squeeze(yi(1,:,:)).*semtime.betweenrow(i).*...
             DICpixelrowheight; %time from start of aquisition period of every pixel in the image
     end
@@ -37,8 +37,8 @@ for i=1:length(FileNames)
     end
     %DEBUG - plot the picel time for every image
     %{
-    h=pcolor(squeeze(xi(i,:,:)),squeeze(yi(i,:,:)),squeeze(DICpixeltimeshaped(i,:,:)));
-    set(h,'EdgeColor','none')
+    plot(DICpixeltimeshaped(i,:))
+    hold on
     pause(1)
     %}
 end

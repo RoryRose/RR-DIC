@@ -44,7 +44,7 @@ for i = 1:length(imageNames)
     else
         %ignore any non-rigid body translations in the transform estimate!
         meandx(i)=-tformEstimate{i}.T(3,1); %get x translation in pixels by looking at the transformation matrix
-        meandy(i)=-tformEstimate{i}.T(3,2); %get y translation in pixels by looking at the transformation matrix
+        meandy(i)=tformEstimate{i}.T(3,2); %get y translation in pixels by looking at the transformation matrix
     end
 end
 end

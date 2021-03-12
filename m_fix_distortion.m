@@ -43,9 +43,10 @@ if imagedispq==1 %if images were collected by moving the beam OR not collected o
     %IMPORTANT: this method will deal with displacements in pixels based on
     %the calculated transformation between the images
 else
-	[pixelheight,pixelwidth,DwellTime,LineTime,imageTime,meandx,meandy]=f_getImageData(imageDir);
-    %IMPORTANT: this methd will deal wih displacements in mm and not
-    %pixels!
+    [~,meandx,meandy,~,~,tformEstimate]=f_getTform(imageDir);
+    [pixelheight,pixelwidth,DwellTime,LineTime,imageTime]=f_getImageData(imageDir);
+    %IMPORTANT: this method will deal with displacements in pixels based on
+    %the calculated transformation between the images!
 end
 %% initialise time data - this must use the imaging parameters in the future
 semtime=struct();
@@ -58,6 +59,8 @@ semtime.frame=pixelheight.*pixelwidth*semtime.dwell+pixelheight*semtime.betweenr
 [Ximrange,Yimrange,XYimrange]=f_findimageindex(meandx,meandy);
 meandy(min(Ximrange):min(Yimrange))=0;%assume that the translations were done correctly and that any values in here are just incorrect from f_getTform
 meandx(min(Yimrange):end)=meandx(min(Yimrange)+1);%assume that the translations were done correctly and that any values in here are just incorrect from f_getTform
+meandx=round(meandx);%round the displacements to the nearest pixel
+meandy=round(meandy);
 %% 
 % for runindex=1:2
 runindex=1;%temporarilly setting the loop variable to one for testing
@@ -147,24 +150,30 @@ runindex=1;%temporarilly setting the loop variable to one for testing
     %creates a local drift distorion model for every image and so you only
     %locally fix drift distortion. (recommended by literature)
     if globalq==1
-        [drifutaftertime,drifvtaftertime,timevals]=f_GLOBAL_calculate_drift_dist(XYimrange,FileNames,DICpixeltimeshaped,dispq,meandx,meandy,DICproscess,data,DICpixeltime);
+        [drifutaftertime,drifvtaftertime,timevals]=f_GLOBAL_calculate_drift_dist(XYimrange,FileNames,DICpixeltimeshaped,dispq,meandx,meandy,DICproscess,data,DICpixeltime,semtime);
     elseif globalq==0
-        [drifutaftertimeT,drifvtaftertimeT,timevals]=f_GLOBAL_calculate_drift_dist(XYimrange,FileNames,DICpixeltimeshaped,dispq,meandx,meandy,DICproscess,data,DICpixeltime);
+        [drifutaftertime,drifvtaftertime,timevals]=f_GLOBAL_calculate_drift_dist(XYimrange,FileNames,DICpixeltimeshaped,dispq,meandx,meandy,DICproscess,data,DICpixeltime,semtime);
         [Pu,Pv]=f_LOCAL_calculate_drift_dist(XYimrange,FileNames,DICpixeltimeshaped,dispq,meandx,meandy,DICproscess,data);
         %combine the local and global model to find the total drift by
         %addin the value of the global model at the start of each image to
         %the local model for every pixel
-        drifutaftertime=NaN(length(XYimrange)/2,size(drifutaftertimeT,2),size(drifutaftertimeT,3));
-        drifvtaftertime=drifutaftertime;
+        disp('Combining local and global drift models')
         for i = 1:length(XYimrange)/2
             firstidx=XYimrange(2*i-1);
             secondidx=XYimrange(2*i);    
-            timediff=DICpixeltimeshaped(secondidx,:,:)-DICpixeltimeshaped(firstidx,1,1);
-            drifutaftertime(i,:,:)=reshape(drifutaftertimeT(firstidx,1,1)+Pu{i}(timediff),size(drifutaftertimeT,2),size(drifutaftertimeT,3));
-            drifvtaftertime(i,:,:)=reshape(drifvtaftertimeT(firstidx,1,1)+Pv{i}(timediff),size(drifutaftertimeT,2),size(drifutaftertimeT,3));
+            timediff2=DICpixeltimeshaped(secondidx,:,:)-DICpixeltimeshaped(firstidx,1,1);
+            timediff1=DICpixeltimeshaped(firstidx,:,:)-DICpixeltimeshaped(firstidx,1,1);
+            ufit1 = slmeval(timediff1,Pu{i},0);%evaluate the fit for all of the time values
+            ufit2 = slmeval(timediff2,Pu{i},0);
+            vfit1 = slmeval(timediff1,Pv{i},0);
+            vfit2 = slmeval(timediff2,Pv{i},0);
+            drifutaftertime(firstidx,:,:)=reshape(drifutaftertime(firstidx,1,1)+ufit1,size(drifutaftertime,2),size(drifutaftertime,3));
+            drifutaftertime(secondidx,:,:)=reshape(drifutaftertime(firstidx,1,1)+ufit2,size(drifutaftertime,2),size(drifutaftertime,3));
+            drifvtaftertime(firstidx,:,:)=reshape(drifvtaftertime(firstidx,1,1)+vfit1,size(drifutaftertime,2),size(drifutaftertime,3));
+            drifvtaftertime(secondidx,:,:)=reshape(drifvtaftertime(firstidx,1,1)+vfit2,size(drifutaftertime,2),size(drifutaftertime,3));
         end
     end
-    disp('Finished Drift Model')
+    disp('Finished Drift Correction')
     %% find the distortion field u and v corrected for drift
     driftudist=NaN(size(xi));
     driftvdist=driftudist;
@@ -175,7 +184,8 @@ runindex=1;%temporarilly setting the loop variable to one for testing
         driftvdist(i,:,:)=dycorr-meandy(i);
     end
     %% fit the distortion fields to a 3D polynomial and fit distortion at every pixel as a function of displacement
-    [Pxv,Pxu]=f_calculate_spatial_dist(driftudist,driftvdist,xi,yi,Ximrange,meandx);
+    %I AM NOT CONVINCED BY WHAT I HAVE DONE IN THIS SECTION
+    [Pxv,Pxu]=f_calculate_spatial_dist(driftudist,driftvdist,xi,yi,Ximrange,meandx,meandy,1);
     %% for y displacements find the distortion field u and v changing the reference to the first image of the sequence
     Ymeandy=meandy;%reference image is first image prior to first translation along the direction
     Ymeandx=meandx-meandx(Yimrange(1));
@@ -186,45 +196,75 @@ runindex=1;%temporarilly setting the loop variable to one for testing
         Ydriftvdist(i,:,:)=squeeze(dy(i,:,:))-meandy(i);
     end
     %% fit the distortion fields to a 3D polynomial and fit distortion at every pixel as a function of displacement
-    [Pyv,Pyu]=f_calculate_spatial_dist(Ydriftudist,Ydriftvdist,xi,yi,Yimrange,meandy);
+    [Pyv,Pyu]=f_calculate_spatial_dist(Ydriftudist,Ydriftvdist,xi,yi,Yimrange,meandx,meandy,0);
 % end
 %% let's reduce noize by filtering out some points in frequency space
-%{
+%%{
+for i=1:size(xi,1)
+    xi(i,:,:)=squeeze(xi(i,:,:))+meandx(i);%the real pixel positions for every point in the DIC image
+    yi(i,:,:)=squeeze(yi(i,:,:))+meandy(i);
+    [XOut, YOut, ZOut] = prepareSurfaceData(squeeze(xi(i,:,:)),squeeze(yi(i,:,:)),squeeze(rawudist(i,:,:)));
+    udistfit{i} = fit( [XOut, YOut], ZOut, 'poly23');
+    [XOut, YOut, ZOut] = prepareSurfaceData(squeeze(xi(i,:,:)),squeeze(yi(i,:,:)),squeeze(rawudist(i,:,:)));
+    vdistfit{i} = fit( [XOut, YOut], ZOut, 'poly23');
+    udistfitted(i,:,:)=udistfit{i}(squeeze(xi(i,:,:)),squeeze(yi(i,:,:)));
+    vdistfitted(i,:,:)=vdistfit{i}(squeeze(xi(i,:,:)),squeeze(yi(i,:,:)));
+end
+%%
 thresh=0.4;
-D=5;%radius in pixels of the mask of values to test
-udistcorr=reshape(udist(Yimrange,:,:),size(squeeze(Yxi(Yimrange,:,:))))-udistfitted(Yimrange,:,:);
-vdistcorr=reshape(vdist(Yimrange,:,:),size(squeeze(Yxi(Yimrange,:,:))))-vdistfitted(Yimrange,:,:);
-for i=1:length(Yimrange)
-    
+D=100;%radius in pixels of the mask of values to test
+udistcorr=rawudist(:,:,:)-udistfitted(:,:,:);
+vdistcorr=rawvdist(:,:,:)-vdistfitted(:,:,:);
+fixedvdistcorr=[];
+fixedudistcorr=[];
+for i=Yimrange
     fixedudistcorr(i,:,:)=f_reduceNoize(udistcorr(i,:,:),D,thresh);%Use FFt mask which keeps values within radius D of center of shifted FFt but reduces values above the theshold percentage of max
     fixedvdistcorr(i,:,:)=f_reduceNoize(vdistcorr(i,:,:),D,thresh);
 end
-udistcorr=fixedudistcorr+udistfitted(Yimrange,:,:);
-vdistcorr=fixedvdistcorr+vdistfitted(Yimrange,:,:);
-%for x disp
-thresh=0.7;
-D=5;%radius in pixels of the mask of values to test
-udistcorr=reshape(udist(Ximrange,:,:),size(squeeze(Xxi(Ximrange,:,:))))-udistfitted(Ximrange,:,:);
-vdistcorr=reshape(vdist(Ximrange,:,:),size(squeeze(Xxi(Ximrange,:,:))))-vdistfitted(Ximrange,:,:);
-for i=1:length(Ximrange)
-    
-    fixedudistcorr(i,:,:)=f_reduceNoize(udistcorr(i,:,:),D,thresh);%Use FFt mask which keeps values within radius D of center of shifted FFt but reduces values above the theshold percentage of max
-    fixedvdistcorr(i,:,:)=f_reduceNoize(vdistcorr(i,:,:),D,thresh);
-end
-udistcorr=fixedudistcorr+udistfitted(Ximrange,:,:);
-vdistcorr=fixedvdistcorr+vdistfitted(Ximrange,:,:);
+SMudistcorr=fixedudistcorr(Yimrange,:,:);
+SMvdistcorr=fixedvdistcorr(Yimrange,:,:);
+
 %DEBUG - Plot the surfaces of the fit, origional data, and noize reduced data
 %{
-for i=Yimrange
+for i=Ximrange
     subplot(2,2,1)
-    surf(squeeze(Yxi(i,:,:)),squeeze(Yyi(i,:,:)),squeeze(reshape(udist(i,:,:),size(squeeze(Yxi(i,:,:))))))
+    h=surf(squeeze(xi(i,:,:)),squeeze(yi(i,:,:)),squeeze(rawudist(i,:,:)))
     subplot(2,2,2)
-    surf(squeeze(Yxi(i,:,:)),squeeze(Yyi(i,:,:)),squeeze(reshape(vdist(i,:,:),size(squeeze(Yxi(i,:,:))))))
+    h=surf(squeeze(xi(i,:,:)),squeeze(yi(i,:,:)),squeeze(rawvdist(i,:,:)))
     subplot(2,2,3)
-    surf(squeeze(Yxi(i,:,:)),squeeze(Yyi(i,:,:)),squeeze(udistcorr(i,:,:)))
+    h=surf(squeeze(xi(i,:,:)),squeeze(yi(i,:,:)),squeeze(udistcorr(i,:,:)))
     subplot(2,2,4)
-    surf(squeeze(Yxi(i,:,:)),squeeze(Yyi(i,:,:)),squeeze(vdistcorr(i,:,:)))
+    h=surf(squeeze(xi(i,:,:)),squeeze(yi(i,:,:)),squeeze(vdistcorr(i,:,:)))
     pause(5)
 end
 %}
+%DEBUG - plot surfaces pre and post filtering with fft shown
+%smooth data
+%%{
+for i=Yimrange
+    subplot(2,2,1)
+    h=surf(squeeze(xi(i,:,:)),squeeze(yi(i,:,:)),squeeze(udistcorr(i,:,:)));
+    set(h,'Edgecolor','none')
+    xlabel('x1')
+    ylabel('x2')
+    zlabel('u displacement')
+    title(strcat('Raw u displacement field'))
+    subplot(2,2,2)
+    imagesc(abs(fftshift(fft2(squeeze(udistcorr(i,:,:))))));
+    caxis([0,max(max(abs(fftshift(fft2(squeeze(udistcorr(i,:,:)))))))*thresh])
+    title(strcat('FFT of Raw u displacement field'))
+    subplot(2,2,3)
+    h=surf(squeeze(xi(i,:,:)),squeeze(yi(i,:,:)),squeeze(SMudistcorr(Yimrange==i,:,:)));
+    set(h,'Edgecolor','none')
+    xlabel('x1')
+    ylabel('x2')
+    zlabel('u displacement')
+    title(strcat('FFT filtered u displacement field'))
+    subplot(2,2,4)
+    imagesc(abs(fftshift(fft2(squeeze(SMudistcorr(Yimrange==i,:,:))))));
+    caxis([0,max(max(abs(fftshift(fft2(squeeze(SMudistcorr(Yimrange==i,:,:)))))))*thresh])
+    title(strcat('FFT of u displacement field after mask applied'))
+    sgtitle('Drift Corrected X displacement distortion fields showing FFT filtering')
+    pause(5)
+end
 %}

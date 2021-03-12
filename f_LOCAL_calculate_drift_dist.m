@@ -28,15 +28,19 @@ for i = 1:length(XYimrange)/2 %for every image pair
     udist(i,:,:)=seconddx-firstdx;
     vdist(i,:,:)=seconddy-firstdy;
 end
-smoothness=0.07;
+disp('Fitting Local Drift Disparity with smoothing splines')
+% smoothness=0.07;
 for i = 1:length(XYimrange)/2 %for every image pair
     firstidx=XYimrange(2*i-1);
     secondidx=XYimrange(2*i);    
     timediff=DICpixeltimeshaped(secondidx,:)-DICpixeltimeshaped(firstidx,1);
-    Pu{i}=fit(timediff(1:10:end)',squeeze(udist(i,1:10:end))','smoothingspline','SmoothingParam',smoothness);%fit the drift data to a spline
-    Pv{i}=fit(timediff(1:10:end)',squeeze(vdist(i,1:10:end))','smoothingspline','SmoothingParam',smoothness);
+%     Pu{i}=fit(timediff(1:10:end)',squeeze(udist(i,1:10:end))','smoothingspline','SmoothingParam',smoothness);%fit the drift data to a spline
+%     Pv{i}=fit(timediff(1:10:end)',squeeze(vdist(i,1:10:end))','smoothingspline','SmoothingParam',smoothness);
+    [Pu{i}] = slmengine(timediff,udist(i,:),'plot','off');%FOR DEBUG set plot to on
+    [Pv{i}] = slmengine(timediff,vdist(i,:),'plot','off');%FOR DEBUG set plot to on
     %DEBUG - plot the fit and raw data of the local drift distortion
     %{
+    
     subplot(1,2,1)
     scatter(timediff(:),udist(i,:))
     xlabel('Time(s)')
@@ -56,3 +60,4 @@ for i = 1:length(XYimrange)/2 %for every image pair
     pause(0.1)
     %}
 end
+disp('Finished local drift model')

@@ -43,7 +43,7 @@ for i=Yimrange
 end
 %% Model the variation in each point on the surface as a function of x
 %displacement as a linear function
-%IMPORTANT: THIS IS THE PART OF THE CODE THAT I AM LEAST SURE ABOUT!
+%IMPORTANT: THIS IS
 disp('fitting data as a function of translation...')
 [Pyv,Pyu]=f_SpatialDistortion(meandx,meandy,xyq,vdistfitted,udistfitted,Yimrange,xi,yi);
 disp('finished fitting...')
