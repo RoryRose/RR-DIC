@@ -1,5 +1,5 @@
 clear all
-imageDir='C:\Users\User\OneDrive - Nexus365\Part II\Data\DIC\in-situ tests\Sample 1\callibration images\35um for 0.5s\SE2\';%file location of images
+imageDir='Z:\RR\DIC\2021-04-09 insitu 304 steel\Summary\Sample 5\Distortion images\';%file location of images
 cd(imageDir)
 imageNames=dir(fullfile(imageDir,'*.tif'));
 imageNames = {imageNames.name}';
@@ -24,6 +24,14 @@ for i=1:length(imageNames)
     [row,~]=find(~cellfun('isempty',Resolution));
     ResolutionS{i}=tags{row,2};
     
+    BeamX=strfind(tags,'Beam Offset X');
+    [row,~]=find(~cellfun('isempty',BeamX));
+    BeamXS{i}=tags{row,2};
+    
+    BeamY=strfind(tags,'Beam Offset Y');
+    [row,~]=find(~cellfun('isempty',BeamY));
+    BeamYS{i}=tags{row,2};
+
     DwellTime=strfind(tags,'Dwell Time');
     [row,~]=find(~cellfun('isempty',DwellTime));
     DwellTimeS{i}=tags{row,2};
@@ -61,9 +69,9 @@ for i=1:length(imageNames)
     
     imageTime2(i)=datetime(info.FileModDate);
 end
-% [~,meandx,meandy,~,~,~]=f_getTform(imageDir);
 %%
 CycleTimeN=[split(CycleTimeS,{' '})];
+
 CycleTimeN=str2double(CycleTimeN(:,:,2)).*60;%find the cycle time ad convert from minutes to seconds
 DwellTimeN=[split(DwellTimeS,' ')];
 DwellTimeN=str2double(DwellTimeN(:,:,2)).*1e-9;%find the cycle time ad convert from ns to seconds
@@ -84,8 +92,8 @@ XposN=split(XposS,' ');
 XposN=str2double(XposN(:,:,2));
 YposN=split(YposS,' ');
 YposN=str2double(YposN(:,:,2));
-T=table(imageNames,timediff,DwellTimeS',LineTimeS',XposS',YposS',ZposS',(XposN-min(XposN))',(YposN-min(YposN))');
-T.Properties.VariableNames={'Image_Name','Time_from_First_Image_seconds','Dwell_Time','Line_Time','X_position','Y_position','Z_position','X_position_diff','Y_position_diff'};
+T=table(imageNames,timediff,DwellTimeS',LineTimeS',XposS',YposS',ZposS',(XposN-min(XposN))',(YposN-min(YposN))',BeamXS',BeamYS');
+T.Properties.VariableNames={'Image_Name','Time_from_First_Image_seconds','Dwell_Time','Line_Time','X_position','Y_position','Z_position','X_position_diff','Y_position_diff','X_beam_Offset','Y_beam_Offset'};
 T2=table(imageNames,TimeS');
 writetable(T2,'imglist.lst','FileType','text','WriteVariableNames',false);
 writetable(T,'Imagedetails.csv','WriteVariableNames',true);
