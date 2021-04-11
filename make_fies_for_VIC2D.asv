@@ -1,5 +1,5 @@
 clear all
-imageDir='C:\Users\User\OneDrive - Nexus365\Part II\Data\DIC\in-situ tests\Sample 1\callibration images\35um for 0.5s\SE2\';%file location of images
+imageDir='C:\Users\User\OneDrive - Nexus365\Part II\Data\DIC\in-situ tests\Sample 5\Distortion images\';%file location of images
 cd(imageDir)
 imageNames=dir(fullfile(imageDir,'*.tif'));
 imageNames = {imageNames.name}';
@@ -19,11 +19,7 @@ for i=1:length(imageNames)
     CycleTime=strfind(tags,'Cycle Time');
     [row,~]=find(~cellfun('isempty',CycleTime));
     CycleTimeS{i}=tags{row,2};
-    
-    Resolution=strfind(tags,'Store resolution');
-    [row,~]=find(~cellfun('isempty',Resolution));
-    ResolutionS{i}=tags{row,2};
-    
+
     DwellTime=strfind(tags,'Dwell Time');
     [row,~]=find(~cellfun('isempty',DwellTime));
     DwellTimeS{i}=tags{row,2};
@@ -79,7 +75,7 @@ TimeS=strcat({' '},TimeS);
 imageNames=strcat('"',imageNames,'"'); %correct format for VIC 2D imagelist file
 timediff=seconds(duration(dateandtime-min(dateandtime)));
 timediff=seconds(duration(imageTime2-min(imageTime2)))';
-% timediff-timediff2';
+timediff-timediff2';
 XposN=split(XposS,' ');
 XposN=str2double(XposN(:,:,2));
 YposN=split(YposS,' ');

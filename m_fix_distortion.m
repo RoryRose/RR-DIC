@@ -8,9 +8,9 @@
 %Cornille, Nicolas. (2004). Accurate 3D Shape and Displacement Measurement using a Scanning Electron Microscope. Signal and Image processing. INSA de Toulouse, 2005. English. https://tel.archives-ouvertes.fr/file/index/docid/166423/filename/cornille_2005.pdf
 clc
 %workingDir='Z:\RR\DIC\Example from Phani\pre-test calibration\XY disp\pydic\result\';  % do not forget the \ at the end of folder path
-workingDir='Z:\RR\DIC\Example from Phani\pre-test calibration\XY disp\ncorr';  % do not forget the \ at the end of folder path
+workingDir='C:\Users\User\OneDrive - Nexus365\Part II\Data\DIC\beamshiftimages\';  % do not forget the \ at the end of folder path
 cd(workingDir)
-imageDir='Z:\RR\DIC\Example from Phani\pre-test calibration\XY disp\';%file location of images
+imageDir='C:\Users\User\OneDrive - Nexus365\Part II\Data\DIC\beamshiftimages\';%file location of images
 DICproscess='Ncorr';
 if strcmp(DICproscess,'pydic')
     FileNames=dir(fullfile(workingDir,'*.csv'));
