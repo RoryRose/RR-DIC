@@ -1,5 +1,5 @@
 clear all
-imageDir='Z:\RR\DIC\2021-04-09 insitu 304 steel\Summary\Sample 5\Distortion images\';%file location of images
+imageDir='C:\Users\User\OneDrive - Nexus365\Part II\Data\DIC\in-situ tests\Sample 1\Distortion images\InLens\';%file location of images
 cd(imageDir)
 imageNames=dir(fullfile(imageDir,'*.tif'));
 imageNames = {imageNames.name}';
