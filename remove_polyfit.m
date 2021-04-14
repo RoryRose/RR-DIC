@@ -1,6 +1,7 @@
-function [x, y, ZOut]=remove_polyfit(x,y,z)
+function [x, y, ZOut]=remove_polyfit(x,y,z,lim)
 %Remove outliers and zero values as these are artifacts
 z(z==0)=NaN;
+z(z<=min(lim)|z>=max(lim))=NaN;
 normfit=fitdist(z(:),'normal');
 z(z>normfit.mu+3*normfit.sigma)=NaN;
 z(z<normfit.mu-3*normfit.sigma)=NaN;

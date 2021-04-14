@@ -25,7 +25,8 @@ function amplitudeImage3=f_reduceNoize(Image,D,amplitudeThreshold,Cgrad,absthres
     Gmag=imgradient(amplitudeImage);
     brightSpikes(Gmag<Cgrad)=false;
     % Filter/mask the spectrum.
-    brightSpikes=imgaussfilt(double(~brightSpikes));
+    brightSpikes2=imgaussfilt(double(~brightSpikes));
+    brightSpikes=brightSpikes2.*double(~brightSpikes);%make zeros zero
     frequencyImage=frequencyImage.*brightSpikes;
     % Take log magnitude so we can see it better in the display.
     amplitudeImage2 = log(abs(frequencyImage));
