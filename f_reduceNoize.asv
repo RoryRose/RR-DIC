@@ -1,4 +1,4 @@
-function amplitudeImage3=f_reduceNoize(Image,D,amplitudeThreshold,Cgrad,absthresh)
+function amplitudeImage3=f_reduceNoize(Image,D,amplitudeThreshold)
     Image=fillmissing(Image,'constant',0);
     frequencyImage = fftshift(fft2(squeeze(Image)));
     % Take log magnitude so we can see it better in the display.
@@ -7,26 +7,17 @@ function amplitudeImage3=f_reduceNoize(Image,D,amplitudeThreshold,Cgrad,absthres
     maxValue = max(max(amplitudeImage));
     
     % Find the location of the big spikes.
-    if maxValue>absthresh%only change anything if the maximum value is larger absthresh (e.g 3)
-        
-        amplitudeThreshold = maxValue/100*amplitudeThreshold;
-    else
-        amplitudeThreshold=maxValue+1;
-    end
+    amplitudeThreshold = amplitudeThreshold;
     brightSpikes = amplitudeImage > amplitudeThreshold; % Binary image.
     
-    % Exclude the central DC spike with a disk of radius D
+    % Exclude the central DC spike.  Everything from row 115 to 143.
     [x,y]=size(amplitudeImage);
     Mask = fspecial('disk',D)==0;
     Mask = imresize(padarray(Mask, [floor((x/2)-D) floor((y/2)-D)], 1, 'both'), [x y]);%create a circular mask in the center to protect that information
-    brightSpikes(Mask==0)=false;
+    brightSpikes(Mask==0) = 0;
     
-    %Don't remove spikes if local gradient is below Cgrad
-    Gmag=imgradient(amplitudeImage);
-    brightSpikes(Gmag<Cgrad)=false;
     % Filter/mask the spectrum.
-    brightSpikes=imgaussfilt(double(~brightSpikes));
-    frequencyImage=frequencyImage.*brightSpikes;
+    frequencyImage(brightSpikes) = 0;
     % Take log magnitude so we can see it better in the display.
     amplitudeImage2 = log(abs(frequencyImage));
     minValue = min(min(amplitudeImage2));
@@ -40,17 +31,14 @@ function amplitudeImage3=f_reduceNoize(Image,D,amplitudeThreshold,Cgrad,absthres
     maxValue = max(max(amplitudeImage3))
     %DEBUG - show images
     %%{
-    figure(1)
     subplot(2,3,1)
-    imshow(Image, [min(Image(:)) max(Image(:))]);
+    imshow(amplitudeImage2, [minValue maxValue]);
     axis on;
-    title('Input Image');
+    title('Spikes zeroed out');
     subplot(2,3,2)
     imagesc(Mask)
     colormap(gray)
     caxis([0,1])
-    axis image
-    axis on;
     title('Mask to protect values from changing')
     subplot(2,3,3)
     imshow(brightSpikes);
@@ -61,13 +49,12 @@ function amplitudeImage3=f_reduceNoize(Image,D,amplitudeThreshold,Cgrad,absthres
     title(caption);
     axis on;
     subplot(2,3,5)
-    imshow(amplitudeImage2, []);
+    imshow(amplitudeImage2, [minValue maxValue]);
     axis on;
     title('Spikes zeroed out');
-    subplot(2,3,6)
-    imshow(amplitudeImage3, [min(Image(:)) max(Image(:))]);
+    subplot(2,3,5)
+    imshow(amplitudeImage3, [minValue maxValue]);
     title('Filtered Image');
-    axis on;
     %}
 % %     %create mask
 % %     [x,y]=size(Y);

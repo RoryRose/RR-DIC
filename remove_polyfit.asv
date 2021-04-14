@@ -1,0 +1,7 @@
+function [x, y, ZOut]=remove_polyfit(x,y,z)
+z(
+[XOut, YOut, ZOut] = prepareSurfaceData(x,y,z);
+distfit = fit( [XOut, YOut], ZOut, 'poly23');
+dist=distfit(x,y);
+ZOut=z-dist;
+end

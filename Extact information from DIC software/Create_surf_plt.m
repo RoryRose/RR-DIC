@@ -1,6 +1,6 @@
 clear all
 clc
-workingDir='Z:\RR\DIC\Example from Phani\pre-test calibration\pydic\result\';  % do not forget the \ at the end of folder path
+workingDir='C:\Users\User\OneDrive - Nexus365\Part II\Data\DIC\in-situ tests\Sample 1\Distortion images\InLens\Renamed\';  % do not forget the \ at the end of folder path
 cd(workingDir)
 FileNames=dir(fullfile(workingDir,'*.csv'));
 FileNames = {FileNames.name}';
