@@ -1,4 +1,23 @@
 function amplitudeImage3=f_reduceNoize(Image,D,amplitudeThreshold,Cgrad,absthresh)
+%filters an input image using a fft mask whih removes all values above the
+%amplitudeThreshold (in percent of max value) while ignoring the values in
+%a central region given by a disk of radius D (in 'pixels')
+%INPUTS:
+%   Image = input image as a matrix
+%   D = radius of 'protection' mask disk in frequency space in pixels
+%   amplitudeThreshold = threshold of pixels in frequency space to zero as a percentage of the maximum value
+%   Cgrad = critical gradient in frequency space of values below which not
+%       to accept mask values. This stops mask from removing values in smooth
+%       `regions where the surface is more to do with data rather than
+%       artifacts. This can be set to zero.
+%   absthresh = threshold value of when to not do any filtering of the
+%       data when there is no frequency value larger than this number.
+%       again this is designed to stop removal of real data when input
+%       image is not highly distorted
+%OUTPUTS:
+%   amplitudeImage3 = filtered output image expressed as an image
+%   OPTIONAL: plots to show what it did if you uncomment {% section by
+%       changeing to %%{
     if min(Image(:))<0
         shift=abs(min(Image(:)));
     else

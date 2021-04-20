@@ -1,4 +1,5 @@
 function [x, y, ZOut]=remove_polyfit_and_fft_filter(x,y,z,lim,mask,D,thresh,Cgrad,absthresh)
+
 %Remove outliers and zero values as these are artifacts
 % z(mask)=NaN;
 z(z==0)=NaN;
