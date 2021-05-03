@@ -92,8 +92,8 @@ fituvelocity=uvelocity;
 % smoothness=0.07;
 % Pu=fit(fitt,fituvelocity,'smoothingspline','SmoothingParam',smoothness);
 % Pv=fit(fitt,fitvvelocity,'smoothingspline','SmoothingParam',smoothness);
-Pu = slmengine(fitt,fituvelocity,'plot','off','knots',[semtime.scan;max(fitt(:))]');%set the drift %FOR DEBUG set plot to on
-Pv = slmengine(fitt,fitvvelocity,'plot','off','knots',[semtime.scan;max(fitt(:))]');%set the drift %FOR DEBUG set plot to on
+Pu = slmengine(fitt,fituvelocity,'plot','on');%,'knots',[semtime.scan;max(fitt(:))./2]');%set the drift %FOR DEBUG set plot to on
+Pv = slmengine(fitt,fitvvelocity,'plot','on');%,'knots',[semtime.scan;max(fitt(:))./2]');%set the drift %FOR DEBUG set plot to on
 %This uses the matworks toolbox to allow for constraints and easy integrating
 
 
@@ -116,9 +116,16 @@ for i = 2:length(timevals)
 end
 %DEBUG - plot the global models
 %{
+yyaxis left
 plot(timevals,evaldrifxtaftertime)
-hold on
+ylabel('u distortion')
+xlim([1627,max(timevals)])
+yyaxis right
+ylabel('v distortion')
 plot(timevals,evaldrifytaftertime)
+xlim([1627,max(timevals)])
+xlabel('Time (s)')
+legend({'u distortion','v distortion'})
 %}
 disp('evaluating integrated fit for every pixel...')
 %round the evaluation time for every pixel to the time nearest value in timevals

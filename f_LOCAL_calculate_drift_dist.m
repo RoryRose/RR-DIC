@@ -36,26 +36,26 @@ for i = 1:length(XYimrange)/2 %for every image pair
     timediff=DICpixeltimeshaped(secondidx,:)-DICpixeltimeshaped(firstidx,1);
 %     Pu{i}=fit(timediff(1:10:end)',squeeze(udist(i,1:10:end))','smoothingspline','SmoothingParam',smoothness);%fit the drift data to a spline
 %     Pv{i}=fit(timediff(1:10:end)',squeeze(vdist(i,1:10:end))','smoothingspline','SmoothingParam',smoothness);
-    [Pu{i}] = slmengine(timediff,udist(i,:),'plot','off');%FOR DEBUG set plot to on
+    [Pu{i},yval,xval] = slmengine(timediff,udist(i,:),'plot','off');%FOR DEBUG set plot to on
     [Pv{i}] = slmengine(timediff,vdist(i,:),'plot','off');%FOR DEBUG set plot to on
     %DEBUG - plot the fit and raw data of the local drift distortion
-    %{
-    
-    subplot(1,2,1)
+    %%{
+    t=min(timediff):max(timediff);
+    subplot(2,length(XYimrange)/2,i)
     scatter(timediff(:),udist(i,:))
     xlabel('Time(s)')
     ylabel('U distortion')
     title(strcat('U Distortion for image pair',{' '},num2str(i)))
     hold on
-    plot(timediff(1:10:end),Pu{i}(timediff(1:10:end)))
+    plot(t,slmeval(t,Pu{i},0),'LineWidth',3);
     hold off
-    subplot(1,2,2)
-    scatter(timediff,vdist(i,:))
+    subplot(2,length(XYimrange)/2,i+length(XYimrange)/2)
+    scatter(timediff(:),vdist(i,:))
     hold on
     xlabel('Time(s)')
     ylabel('V distortion')
     title(strcat('V Distortion for image pair',{' '},num2str(i)))
-    plot(timediff(1:100:end),Pv{i}(timediff(1:100:end)))
+    plot(t,slmeval(t,Pv{i},0),'LineWidth',3)
     hold off
     pause(0.1)
     %}

@@ -71,14 +71,14 @@ function amplitudeImage3=f_reduceNoize(Image,D,amplitudeThreshold,Cgrad,absthres
     figure(1)
     subplot(2,3,1)
     imshow(Image, [min(Image(:)) max(Image(:))]);
-    axis on;
+    axis off;
     title('Input Image');
     subplot(2,3,2)
     imagesc(Mask)
     colormap(gray)
     caxis([0,1])
     axis image
-    axis on;
+    axis off;
     title('Mask to protect values from changing')
     subplot(2,3,3)
     imshow(brightSpikes);
@@ -87,15 +87,15 @@ function amplitudeImage3=f_reduceNoize(Image,D,amplitudeThreshold,Cgrad,absthres
     imshow(amplitudeImage, []);
     caption = sprintf('Amplitude Image');
     title(caption);
-    axis on;
+    axis off;
     subplot(2,3,5)
     imshow(amplitudeImage2, []);
-    axis on;
+    axis off;
     title('Spikes zeroed out');
     subplot(2,3,6)
     imshow(amplitudeImage3, []);
     title('Filtered Image');
-    axis on;
+    axis off;
     %}
 
     
