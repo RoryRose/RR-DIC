@@ -8,9 +8,9 @@
 %Cornille, Nicolas. (2004). Accurate 3D Shape and Displacement Measurement using a Scanning Electron Microscope. Signal and Image processing. INSA de Toulouse, 2005. English. https://tel.archives-ouvertes.fr/file/index/docid/166423/filename/cornille_2005.pdf
 clc
 %workingDir='Z:\RR\DIC\Example from Phani\pre-test calibration\XY disp\pydic\result\';  % do not forget the \ at the end of folder path
-workingDir='C:\Users\User\OneDrive - Nexus365\Part II\Data\DIC\beamshiftimages\';  % do not forget the \ at the end of folder path
+workingDir='C:\Users\User\OneDrive - Nexus365\Part II\Data\DIC\Example from Phani\pre-test calibration\ncorr\';  % do not forget the \ at the end of folder path
 cd(workingDir)
-imageDir='C:\Users\User\OneDrive - Nexus365\Part II\Data\DIC\beamshiftimages\';%file location of images
+imageDir='C:\Users\User\OneDrive - Nexus365\Part II\Data\DIC\Example from Phani\pre-test calibration\ncorr\';%file location of images
 DICproscess='Ncorr';
 if strcmp(DICproscess,'pydic')
     FileNames=dir(fullfile(workingDir,'*.csv'));
@@ -30,6 +30,20 @@ elseif strcmp(DICproscess,'Ncorr')
     end
     FileNames=1:size(data{1,1}.data_dic_save.displacements,2)+1;%the plus 1 is to be able to add the reference image at the start with zero displacements for compatability
     dispq=0; %is displacement measured relative? = 1 if displacements are zero for a ideal rigid body translation
+elseif strcmp(DICproscess,'Vic2D')
+    FileNames=dir(fullfile(workingDir,'*.mat'));
+    FileNames = {FileNames.name}';
+    if isa(FileNames,'char') == true
+        file = cellstr(file);
+    end
+    NameArray = transpose(string(FileNames));
+    data=cell(length(FileNames),1);
+    for FileNum = 1:length(FileNames)
+        data{FileNum}=load(FileNames{FileNum});
+    end
+    FileNames=1:size(data{1,1}.data_dic_save.displacements,2)+1;%the plus 1 is to be able to add the reference image at the start with zero displacements for compatability
+    dispq=0; %is displacement measured relative? = 1 if displacements are zero for a ideal rigid body translation
+
 else
     error('DIC Input not supported')
 end
@@ -71,7 +85,7 @@ runindex=1;%temporarilly setting the loop variable to one for testing
             rawudist(i,:,:)=squeeze(dx(i,:,:))-meandx(i);
             rawvdist(i,:,:)=squeeze(dy(i,:,:))-meandy(i);
             %DEBUG - plot file
-            %{
+            %%{
             figure(1)
             subplot(2,2,1)
             h=pcolor(squeeze(xi(i,:,:)),squeeze(yi(i,:,:)),squeeze(dx(i,:,:)));

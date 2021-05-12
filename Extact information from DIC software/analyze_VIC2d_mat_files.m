@@ -12,16 +12,17 @@ end
 %% create fits for exx, eyy and tresca
 filename='Strain FFT corrected - no polyfit.gif';
 D=20;
-thresh=95;
-Cgrad=0;
+thresh=70;
+Cgrad=-100;
 absthresh=1;
 lim=[-1,5];
-[x,y,exx]=remove_polyfit_and_fft_filter(data{3}.x,data{3}.y,exx,lim,mask,D,thresh,Cgrad,absthresh);%this is just one of 
+mask=[];
+[x,y,exx]=remove_polyfit_and_fft_filter(data{3}.x,data{3}.y,data{3}.exx,lim,mask,D,thresh,Cgrad,absthresh);%this is just one of 
 %the images data which shows where we can get data from all images as a 
 %first pass on culling bad data
 mask=isnan(exx);
 j=1;%counting variable
-for i = [3,5,7,12,13,17,19,21,23,25]%1:length(FileNames)
+for i = 24%[3,5,7,12,13,17,19,21,23,25]%1:length(FileNames)
     [x,y,exx]=remove_polyfit_and_fft_filter(data{i}.x,data{i}.y,data{i}.exx,lim,mask,D,thresh,Cgrad,absthresh);
 %     [x,y,exx2]=remove_polyfit(data{i}.x,data{i}.y,exx2,lim);
     [~,~,eyy]=remove_polyfit_and_fft_filter(data{i}.x,data{i}.y,data{i}.eyy,lim,mask,D,thresh,Cgrad,absthresh);
